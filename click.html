@@ -1,0 +1,1250 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <meta name="keywords" content="CPS, CPS测试, 手速, 点击速度测试, 鼠标点击速度, 键盘手速"/>
+    <meta name="description" content="在线高精度CPS测试。在测试区域内尽可能快地点击鼠标，测试你的点击速度与极限，支持自定义时间，查看历史成绩和手速段位！"/>
+    
+    <!-- 引入 Outfit 现代科技感字体 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
+    <title>在线CPS测试 - 鼠标点击速度极限测试</title>
+    
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0a0612, #160e29, #090614);
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --card-border: rgba(255, 255, 255, 0.08);
+            --card-hover-border: rgba(255, 255, 255, 0.16);
+            --text-primary: #f3effa;
+            --text-secondary: #a393bf;
+            --accent-cyan: #00f2fe;
+            --accent-pink: #ff007f;
+            --accent-glow: rgba(127, 0, 255, 0.3);
+            --btn-gradient: linear-gradient(135deg, #7f00ff, #e100ff);
+            --btn-hover-gradient: linear-gradient(135deg, #8f1aff, #ec1aff);
+        }
+
+        * {
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            font-family: 'Outfit', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* 装饰背景发光球 */
+        .bg-glow {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(150px);
+            z-index: -1;
+            opacity: 0.12;
+            pointer-events: none;
+        }
+        .bg-glow-1 {
+            top: 10%;
+            left: 15%;
+            width: 400px;
+            height: 400px;
+            background: var(--accent-cyan);
+        }
+        .bg-glow-2 {
+            bottom: 15%;
+            right: 15%;
+            width: 500px;
+            height: 500px;
+            background: #7f00ff;
+        }
+
+        /* 顶部导航栏 */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 8%;
+            border-bottom: 1px solid var(--card-border);
+            backdrop-filter: blur(12px);
+            background: rgba(10, 6, 18, 0.5);
+            z-index: 10;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent-cyan), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 1px;
+        }
+
+        .nav-capsule {
+            display: flex;
+            background: rgba(255, 255, 255, 0.04);
+            padding: 4px;
+            border-radius: 30px;
+            border: 1px solid var(--card-border);
+        }
+
+        .nav-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 8px 24px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .nav-btn.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .nav-btn:hover:not(.active) {
+            color: var(--text-primary);
+        }
+
+        /* 主体内容区域 */
+        main {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 30px 20px;
+            z-index: 2;
+        }
+
+        .page {
+            width: 100%;
+            max-width: 800px;
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 卡片基础样式 */
+        .card {
+            background: var(--card-bg);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 32px;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.24);
+        }
+
+        /* 测试主页容器 */
+        .test-container {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        /* 数据状态面板 */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 16px;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .stat-card:hover {
+            border-color: var(--card-hover-border);
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-primary);
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 核心点击测试面板 */
+        .click-pad {
+            width: 100%;
+            height: 280px;
+            background: rgba(255, 255, 255, 0.01);
+            border: 2px dashed rgba(255, 255, 255, 0.15);
+            border-radius: 24px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            user-select: none;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .click-pad:hover {
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 35px rgba(0, 242, 254, 0.12);
+        }
+
+        .click-pad:active {
+            transform: scale(0.985);
+            border-color: var(--accent-pink);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 0 20px rgba(255, 0, 127, 0.15);
+        }
+
+        .click-pad-content {
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .click-pad-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            animation: bounce 2.5s infinite ease-in-out;
+        }
+
+        .click-pad-text {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .click-pad-sub {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* 点击波纹涟漪 */
+        .ripple {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            background: radial-gradient(circle, rgba(0, 242, 254, 0.35) 0%, rgba(127, 0, 255, 0) 70%);
+            border-radius: 50%;
+            transform: translate(-50%, -50%) scale(0);
+            animation: ripple-effect 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards;
+            pointer-events: none;
+        }
+
+        @keyframes ripple-effect {
+            to {
+                transform: translate(-50%, -50%) scale(3.5);
+                opacity: 0;
+            }
+        }
+
+        /* 浮动加分数字动画 */
+        .plus-one {
+            position: absolute;
+            color: var(--accent-cyan);
+            font-weight: 800;
+            font-size: 22px;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            animation: float-up 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+            text-shadow: 0 0 10px rgba(0, 242, 254, 0.8);
+        }
+
+        @keyframes float-up {
+            0% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 1;
+            }
+            100% {
+                transform: translate(-50%, -130px) scale(1.3);
+                opacity: 0;
+            }
+        }
+
+        /* 时长选择控制板 */
+        .control-panel {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 20px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .duration-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .duration-options {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 10px;
+        }
+
+        .duration-btn {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            padding: 12px 0;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            font-family: inherit;
+            transition: all 0.25s ease;
+        }
+
+        .duration-btn:hover:not(.active):not(:disabled) {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--text-primary);
+            border-color: var(--card-hover-border);
+        }
+
+        .duration-btn.active {
+            background: var(--btn-gradient);
+            color: white;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(127, 0, 255, 0.4);
+        }
+
+        .duration-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        /* 按钮通用样式 */
+        .btn {
+            border: none;
+            border-radius: 14px;
+            padding: 14px 28px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-family: inherit;
+        }
+
+        .btn-primary {
+            background: var(--btn-gradient);
+            color: white;
+            box-shadow: 0 4px 15px rgba(127, 0, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(127, 0, 255, 0.5);
+            background: var(--btn-hover-gradient);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff007f, #ff003c);
+            color: white;
+            box-shadow: 0 4px 15px rgba(255, 0, 127, 0.25);
+        }
+
+        .btn-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(255, 0, 127, 0.4);
+        }
+
+        .btn-danger:active {
+            transform: translateY(0);
+        }
+
+        /* 测试结果报告卡片 */
+        .results-card {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(0, 242, 254, 0.25);
+            border-radius: 24px;
+            padding: 32px;
+            margin-top: 8px;
+            text-align: center;
+            backdrop-filter: blur(16px);
+            box-shadow: 0 12px 40px rgba(0, 242, 254, 0.08);
+            animation: slideUp 0.5s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+        }
+
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(40px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-card h3 {
+            margin-top: 0;
+            font-size: 24px;
+            background: linear-gradient(135deg, var(--accent-cyan), #ffffff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 24px;
+            font-weight: 800;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        .result-item {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 18px;
+            padding: 18px;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+            text-align: center;
+        }
+
+        .result-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .result-val {
+            font-size: 26px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+
+        .result-val.highlight {
+            font-size: 40px;
+            color: var(--accent-cyan);
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+        }
+
+        .rank-box {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid var(--card-border);
+            border-radius: 18px;
+            padding: 22px;
+            margin-bottom: 28px;
+        }
+
+        .rank-title {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .rank-badge {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--accent-pink);
+            margin-bottom: 8px;
+            text-shadow: 0 0 15px rgba(255, 0, 127, 0.35);
+        }
+
+        .rank-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        /* 历史记录页面样式 */
+        .records-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .records-header h2 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 16px;
+            border: 1px solid var(--card-border);
+            background: rgba(0, 0, 0, 0.15);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            min-width: 600px;
+        }
+
+        th {
+            padding: 16px 20px;
+            color: var(--text-secondary);
+            font-weight: 700;
+            font-size: 14px;
+            border-bottom: 2px solid var(--card-border);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        td {
+            padding: 16px 20px;
+            font-size: 14px;
+            border-bottom: 1px solid var(--card-border);
+            color: var(--text-primary);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-secondary);
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+
+        /* 关于说明页面样式 */
+        .about-content h2 {
+            margin-top: 0;
+            font-size: 24px;
+            font-weight: 800;
+            margin-bottom: 20px;
+        }
+
+        .about-content p {
+            line-height: 1.7;
+            color: var(--text-secondary);
+            font-size: 15px;
+            margin-bottom: 24px;
+        }
+
+        .about-content h3 {
+            font-size: 18px;
+            color: var(--text-primary);
+            margin-top: 24px;
+            margin-bottom: 12px;
+            font-weight: 700;
+        }
+
+        .about-content ul {
+            padding-left: 20px;
+            margin-bottom: 24px;
+        }
+
+        .about-content li {
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .about-content strong {
+            color: var(--text-primary);
+        }
+
+        .support-box {
+            background: rgba(0, 242, 254, 0.03);
+            border: 1px dashed rgba(0, 242, 254, 0.25);
+            border-radius: 18px;
+            padding: 24px;
+            text-align: center;
+            margin-top: 32px;
+        }
+
+        .support-box h4 {
+            margin-top: 0;
+            font-size: 16px;
+            color: var(--accent-cyan);
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .support-box p {
+            margin-bottom: 0;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        /* 页脚 */
+        footer {
+            text-align: center;
+            padding: 24px;
+            font-size: 13px;
+            color: var(--text-secondary);
+            border-top: 1px solid var(--card-border);
+            background: rgba(10, 6, 18, 0.4);
+            z-index: 10;
+        }
+
+        footer a {
+            color: var(--accent-cyan);
+            text-decoration: none;
+            transition: color 0.2s ease;
+        }
+
+        footer a:hover {
+            color: var(--text-primary);
+        }
+
+        /* 移动端适配 */
+        @media screen and (max-width: 768px) {
+            header {
+                padding: 16px 5%;
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .logo {
+                font-size: 20px;
+            }
+
+            .nav-btn {
+                padding: 8px 18px;
+                font-size: 14px;
+            }
+
+            main {
+                padding: 20px 12px;
+            }
+
+            .card {
+                padding: 24px 16px;
+            }
+
+            .stats-row {
+                gap: 8px;
+            }
+
+            .stat-value {
+                font-size: 24px;
+            }
+
+            .stat-card {
+                padding: 12px 8px;
+            }
+
+            .click-pad {
+                height: 240px;
+            }
+
+            .click-pad-text {
+                font-size: 18px;
+            }
+
+            .duration-options {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 8px;
+            }
+
+            .duration-btn {
+                padding: 10px 0;
+            }
+
+            .results-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .result-val.highlight {
+                font-size: 32px;
+            }
+
+            .rank-badge {
+                font-size: 24px;
+            }
+
+            .records-header {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .records-header h2 {
+                font-size: 20px;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 装饰性背景发光球 -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <!-- 顶部导航栏 -->
+    <header>
+        <div class="logo">
+            <span>⚡</span> CPS TEST
+        </div>
+        <div class="nav-capsule">
+            <button class="nav-btn active" data-target="home-page">测试 / Test</button>
+            <button class="nav-btn" data-target="recording-page">记录 / Records</button>
+            <button class="nav-btn" data-target="about-page">说明 / About</button>
+        </div>
+    </header>
+
+    <!-- 主体内容区域 -->
+    <main>
+        <!-- 首页 - CPS 测试 -->
+        <div id="home-page" class="page active">
+            <div class="test-container card">
+                <!-- 实时统计面板 -->
+                <div class="stats-row">
+                    <div class="stat-card">
+                        <div class="stat-label">⏳ 剩余时间 / Time</div>
+                        <div class="stat-value" id="time-display">10.00s</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">🖱️ 累计点击 / Clicks</div>
+                        <div class="stat-value" id="clicks-display">0</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">🚀 实时速度 / Live CPS</div>
+                        <div class="stat-value" id="cps-display">0.0</div>
+                    </div>
+                </div>
+
+                <!-- 核心点击区域 -->
+                <div class="click-pad" id="click-pad">
+                    <div class="click-pad-content">
+                        <div class="click-pad-icon">🎯</div>
+                        <div class="click-pad-text" id="click-pad-text">点击此处开始测试 / CLICK TO START</div>
+                        <div class="click-pad-sub" id="click-pad-sub">测试开始后，在此区域内疯狂连续点击！</div>
+                    </div>
+                </div>
+
+                <!-- 时长选择面板 -->
+                <div class="control-panel">
+                    <div class="duration-label">⏱️ 选择测试时长 (秒) / Duration (s):</div>
+                    <div class="duration-options" id="duration-options">
+                        <button class="duration-btn" data-duration="1">1s</button>
+                        <button class="duration-btn" data-duration="3">3s</button>
+                        <button class="duration-btn" data-duration="5">5s</button>
+                        <button class="duration-btn active" data-duration="10">10s</button>
+                        <button class="duration-btn" data-duration="30">30s</button>
+                        <button class="duration-btn" data-duration="60">60s</button>
+                    </div>
+                </div>
+
+                <!-- 测试结果报告 -->
+                <div class="results-card" id="results-card" style="display: none;">
+                    <h3>📊 测试报告 / Report</h3>
+                    <div class="results-grid">
+                        <div class="result-item">
+                            <div class="result-label">平均速度 (CPS)</div>
+                            <div class="result-val highlight" id="res-avg">0.00</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">总点击次数</div>
+                            <div class="result-val" id="res-clicks">0</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">最高瞬时 CPS</div>
+                            <div class="result-val" id="res-max">0</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">最低瞬时 CPS</div>
+                            <div class="result-val" id="res-min">0</div>
+                        </div>
+                    </div>
+                    <div class="rank-box">
+                        <div class="rank-title">⚡ 手速评级 / Rank</div>
+                        <div class="rank-badge" id="res-rank">🐌 乌龟</div>
+                        <div class="rank-desc" id="res-rank-desc">要加油哦，突破极限吧！</div>
+                    </div>
+                    <button class="btn btn-primary" id="retest-btn">再次挑战 / Try Again</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 历史记录页面 -->
+        <div id="recording-page" class="page">
+            <div class="records-container card">
+                <div class="records-header">
+                    <h2>🏆 个人历史记录 / Leaderboard</h2>
+                    <button class="btn btn-danger" id="clear-records-btn">🧹 清除全部记录 / Clear All</button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="records-table">
+                        <thead>
+                            <tr>
+                                <th>测试时间 / Date</th>
+                                <th>测试时长 / Duration</th>
+                                <th>点击总数 / Clicks</th>
+                                <th>平均 CPS / Avg CPS</th>
+                                <th>最高 CPS / Max</th>
+                                <th>最低 CPS / Min</th>
+                            </tr>
+                        </thead>
+                        <tbody id="records-tbody">
+                            <!-- 动态插入历史成绩 -->
+                        </tbody>
+                    </table>
+                    <div id="no-records-msg" class="empty-state">
+                        📭 还没有测试记录！赶快去完成你的第一次手速挑战吧。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 说明介绍页面 -->
+        <div id="about-page" class="page">
+            <div class="about-container card">
+                <div class="about-content">
+                    <h2>ℹ️ 什么是 CPS 测试？</h2>
+                    <p>
+                        <strong>CPS（Clicks Per Second）</strong> 代表<strong>每秒鼠标点击次数</strong>。它是衡量你的手指反应、连点频率和游戏微操（例如 Minecraft 电竞玩家的 PVP 连招、即时战略游戏中的快捷操作）的一项关键指标。
+                    </p>
+                    
+                    <h3>📝 怎么开始测试？</h3>
+                    <ul>
+                        <li>点击顶部导航栏的 <strong>“测试 / Test”</strong> 按钮进入测试主界面。</li>
+                        <li>在底部的控制面板中，自主选择适合你的测试时长（提供 <strong>1秒 / 3秒 / 5秒 / 10秒 / 30秒 / 60秒</strong> 多种规格）。</li>
+                        <li>将光标移入巨大的虚线测试框中，点击第一声即可<strong>自动触发</strong>倒计时。</li>
+                        <li>在剩余时间内，尽可能飞速地连续点击。结束后系统将自动计算出高精度的 CPS 报告，并存入本地历史记录。</li>
+                    </ul>
+
+                    <h3>💡 为什么我们更精准？</h3>
+                    <ul>
+                        <li><strong>毫秒级高精度：</strong>我们舍弃了传统的 `setInterval` 模糊计数，采用 Web API 中高精度的 `performance.now()` 时间戳追踪，精确还原每一次物理点击。</li>
+                        <li><strong>智能段位体系：</strong>基于您的平均 CPS，系统将为您赋予从“乌龟”到“机械神族”的荣耀称号！</li>
+                        <li><strong>本地持久化：</strong>所有测试记录均保存在您的本地浏览器中，刷新网页也不会丢失。</li>
+                    </ul>
+
+                    <div class="support-box">
+                        <h4>💖 极简与绿色体验</h4>
+                        <p>本工具不含任何多余广告与外部图片加载，保障绝对流畅的点击和流畅度。去突破你自己的最高点击记录吧！</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- 页脚 -->
+    <footer>
+        <div>在线 CPS 点击速度测试工具 | 精准、现代、高性能</div>
+        <div style="margin-top: 8px; font-size: 12px; opacity: 0.8;">
+            © 2026 <a href="javascript:;">CPS-TEST</a>. Powered by Pure Vanilla Web Tech.
+        </div>
+    </footer>
+
+    <script>
+        // --- 全局状态变量 ---
+        let duration = 10;          // 测试时长 (默认10秒)
+        let isTesting = false;      // 是否正在测试中
+        let isFinished = false;     // 是否测试结束
+        let clicks = [];            // 点击事件高精度时间戳数组
+        let startTime = null;       // 开始测试的绝对毫秒时间戳
+        let animationFrameId = null;// 渲染帧 ID
+
+        // --- DOM 元素缓存 ---
+        const timeDisplay = document.getElementById('time-display');
+        const clicksDisplay = document.getElementById('clicks-display');
+        const cpsDisplay = document.getElementById('cps-display');
+        
+        const clickPad = document.getElementById('click-pad');
+        const clickPadText = document.getElementById('click-pad-text');
+        const clickPadSub = document.getElementById('click-pad-sub');
+        
+        const durationBtns = document.querySelectorAll('.duration-btn');
+        const navBtns = document.querySelectorAll('.nav-btn');
+        const pages = document.querySelectorAll('.page');
+        
+        const resultsCard = document.getElementById('results-card');
+        const resAvg = document.getElementById('res-avg');
+        const resClicks = document.getElementById('res-clicks');
+        const resMax = document.getElementById('res-max');
+        const resMin = document.getElementById('res-min');
+        const resRank = document.getElementById('res-rank');
+        const resRankDesc = document.getElementById('res-rank-desc');
+        const retestBtn = document.getElementById('retest-btn');
+        const clearRecordsBtn = document.getElementById('clear-records-btn');
+
+        // --- 1. 导航与页面切换逻辑 ---
+        navBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const targetPageId = this.getAttribute('data-target');
+                
+                // 如果正在测试中，切换页面给予确认提示并强制重置
+                if (isTesting) {
+                    if (!confirm('测试正在进行中，切换页面将终止当前测试。确定要继续吗？')) {
+                        return;
+                    }
+                    cancelAnimationFrame(animationFrameId);
+                    resetTest();
+                }
+                
+                // 激活当前导航按钮样式
+                navBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // 切换对应页面视图
+                pages.forEach(p => {
+                    p.classList.remove('active');
+                    if (p.id === targetPageId) {
+                        p.classList.add('active');
+                    }
+                });
+
+                // 切换到记录页时动态重绘表格
+                if (targetPageId === 'recording-page') {
+                    renderRecords();
+                }
+            });
+        });
+
+        // --- 2. 时长选择逻辑 ---
+        durationBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                if (isTesting) return; // 运行中禁止更改时长
+                
+                if (isFinished) {
+                    resetTest(); // 若上次测试已完毕，点击新时长自动重置
+                }
+
+                durationBtns.forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                duration = parseInt(this.getAttribute('data-duration'));
+                timeDisplay.innerText = duration.toFixed(2) + 's';
+            });
+        });
+
+        // --- 3. 核心测试逻辑 ---
+        
+        // 绑定 pointerdown 事件以实现超低延迟和防双击干扰
+        clickPad.addEventListener('pointerdown', function(e) {
+            e.preventDefault();
+            
+            // 仅允许鼠标左键、触摸及手写笔进行测试
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            if (isFinished) return;
+
+            // 第一次点击：启动测试
+            if (!isTesting) {
+                startTest();
+            }
+
+            // 记录当前物理点击的精确时间戳
+            const now = performance.now();
+            clicks.push(now);
+
+            // 实时更新总点击次数
+            clicksDisplay.innerText = clicks.length;
+
+            // 产生波纹和数字飘字特效
+            createRipple(e);
+            createFloatNumber(e);
+        });
+
+        function startTest() {
+            isTesting = true;
+            clicks = [];
+            startTime = performance.now();
+
+            // 锁定时间选择面板
+            durationBtns.forEach(btn => btn.disabled = true);
+
+            // 隐藏上一次的结果报告
+            resultsCard.style.display = 'none';
+
+            // 修改点击区域的状态文案
+            clickPadText.innerText = '快点！快点！ / CLICK!';
+            clickPadSub.innerText = '计时已启动，爆发你的手速吧！';
+
+            // 启动高精度动画帧循环
+            tick();
+        }
+
+        // 高精更新循环
+        function tick() {
+            if (!isTesting) return;
+
+            const now = performance.now();
+            const elapsed = (now - startTime) / 1000;
+            const remaining = Math.max(0, duration - elapsed);
+
+            // 更新剩余时间显示 (保留2位小数)
+            timeDisplay.innerText = remaining.toFixed(2) + 's';
+
+            // 更新实时 CPS 速度
+            const elapsedSec = elapsed > 0 ? elapsed : 0.001;
+            const liveCps = (clicks.length / elapsedSec).toFixed(1);
+            cpsDisplay.innerText = liveCps;
+
+            if (elapsed >= duration) {
+                endTest();
+            } else {
+                animationFrameId = requestAnimationFrame(tick);
+            }
+        }
+
+        function endTest() {
+            isTesting = false;
+            isFinished = true;
+            cancelAnimationFrame(animationFrameId);
+
+            // 修正界面状态
+            timeDisplay.innerText = '0.00s';
+            clickPadText.innerText = '测试完成 / FINISHED';
+            clickPadSub.innerText = '倒计时结束，在下方查看你的分析报告！';
+
+            // 计算结果指标
+            const totalClicks = clicks.length;
+            const avgCps = (totalClicks / duration).toFixed(2);
+
+            // 核心修复：将点击记录分配到独立的 1 秒区间容器中，精准获取最高/最低瞬时 CPS
+            const binsCount = Math.ceil(duration);
+            const bins = new Array(binsCount).fill(0);
+
+            clicks.forEach(t => {
+                const relativeTime = (t - startTime) / 1000;
+                let binIdx = Math.floor(relativeTime);
+                if (binIdx >= binsCount) binIdx = binsCount - 1;
+                if (binIdx < 0) binIdx = 0;
+                bins[binIdx]++;
+            });
+
+            const maxCps = Math.max(...bins);
+            // 若总点击为 0，则最低 CPS 也为 0，否则在区间中找最小
+            const minCps = totalClicks === 0 ? 0 : Math.min(...bins);
+
+            // 渲染数据至 UI
+            resAvg.innerText = avgCps;
+            resClicks.innerText = totalClicks;
+            resMax.innerText = maxCps;
+            resMin.innerText = minCps;
+
+            // 获取手速评级
+            const rank = getRank(parseFloat(avgCps));
+            resRank.innerText = rank.badge;
+            resRankDesc.innerText = rank.desc;
+
+            // 展示结果报告并平滑滚动定位
+            resultsCard.style.display = 'block';
+            setTimeout(() => {
+                resultsCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+
+            // 存入 LocalStorage
+            saveRecord(totalClicks, avgCps, maxCps, minCps);
+        }
+
+        // 重置状态准备下一轮测试
+        function resetTest() {
+            isTesting = false;
+            isFinished = false;
+            clicks = [];
+            startTime = null;
+
+            // 解锁时长按钮
+            durationBtns.forEach(btn => btn.disabled = false);
+
+            // 恢复各项默认文本
+            timeDisplay.innerText = duration.toFixed(2) + 's';
+            clicksDisplay.innerText = '0';
+            cpsDisplay.innerText = '0.0';
+
+            clickPadText.innerText = '点击此处开始测试 / CLICK TO START';
+            clickPadSub.innerText = '测试开始后，在此区域内疯狂连续点击！';
+
+            // 隐藏结果卡片
+            resultsCard.style.display = 'none';
+        }
+
+        retestBtn.addEventListener('click', resetTest);
+
+        // --- 4. 段位与评级映射关系 ---
+        function getRank(cps) {
+            if (cps === 0) {
+                return { badge: '💤 挂机中 / AFK', desc: '你好像什么都没有点噢，赶紧动动手指吧！' };
+            } else if (cps < 3) {
+                return { badge: '🐌 乌龟 / Turtle', desc: '手速慢悠悠，可能需要给手指做下热身运动咯！' };
+            } else if (cps < 6) {
+                return { badge: '🐇 兔子 / Rabbit', desc: '正常人的标准手速，发挥非常稳定，继续努力！' };
+            } else if (cps < 10) {
+                return { badge: '🐆 猎豹 / Cheetah', desc: '身手不凡！手速已经突破了普通人的极限，是个操作高手！' };
+            } else if (cps < 15) {
+                return { badge: '⚡ 闪电 / Lightning', desc: '残影！天下武功唯快不破，你的手速已经达到了电竞大神水准！' };
+            } else {
+                return { badge: '🤖 机械神族 / Cyber God', desc: '这速度简直不可思议！你确定你真的不是装了自动连点器吗？！' };
+            }
+        }
+
+        // --- 5. 本地持久化记录模块 ---
+        function saveRecord(clicks, avgCps, maxCps, minCps) {
+            const records = JSON.parse(localStorage.getItem('cps_records') || '[]');
+            
+            // 构造全新记录对象
+            const newRecord = {
+                date: new Date().toLocaleString('zh-CN', { hour12: false }),
+                duration: duration + 's',
+                clicks: clicks,
+                avg: avgCps,
+                max: maxCps,
+                min: minCps
+            };
+
+            // 压入数组头部并限制保留最近的 50 条记录
+            records.unshift(newRecord);
+            if (records.length > 50) {
+                records.pop();
+            }
+
+            localStorage.setItem('cps_records', JSON.stringify(records));
+        }
+
+        function renderRecords() {
+            const records = JSON.parse(localStorage.getItem('cps_records') || '[]');
+            const tbody = document.getElementById('records-tbody');
+            const emptyMsg = document.getElementById('no-records-msg');
+            const table = document.getElementById('records-table');
+
+            tbody.innerHTML = '';
+
+            if (records.length === 0) {
+                emptyMsg.style.display = 'block';
+                table.style.display = 'none';
+            } else {
+                emptyMsg.style.display = 'none';
+                table.style.display = 'table';
+
+                records.forEach(rec => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td>${rec.date}</td>
+                        <td style="font-weight: 600;">${rec.duration}</td>
+                        <td>${rec.clicks}</td>
+                        <td style="font-weight: 800; color: var(--accent-cyan);">${rec.avg}</td>
+                        <td style="color: #00ff88; font-weight: 600;">${rec.max}</td>
+                        <td style="color: #ff3b30; font-weight: 600;">${rec.min}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // 清空所有记录
+        clearRecordsBtn.addEventListener('click', function() {
+            if (confirm('⚠️ 警告：确定要彻底清除本地所有的 CPS 测试记录吗？此操作不可逆！')) {
+                localStorage.removeItem('cps_records');
+                renderRecords();
+            }
+        });
+
+        // --- 6. 交互动效与视觉增强 ---
+
+        // 动态创建点击波纹
+        function createRipple(e) {
+            const rect = clickPad.getBoundingClientRect();
+            // 支持触摸和鼠标点击事件获取精准 XY
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+            
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple');
+            ripple.style.left = `${x}px`;
+            ripple.style.top = `${y}px`;
+
+            clickPad.appendChild(ripple);
+
+            // 动画结束后销毁节点，释放内存
+            ripple.addEventListener('animationend', () => {
+                ripple.remove();
+            });
+        }
+
+        // 动态创建漂浮漂移的 +1 字样
+        function createFloatNumber(e) {
+            const rect = clickPad.getBoundingClientRect();
+            const clientX = e.clientX || (e.touches && e.touches[0].clientX);
+            const clientY = e.clientY || (e.touches && e.touches[0].clientY);
+
+            const x = clientX - rect.left;
+            const y = clientY - rect.top;
+
+            const plusOne = document.createElement('span');
+            plusOne.classList.add('plus-one');
+            plusOne.innerText = '+1';
+            plusOne.style.left = `${x}px`;
+            plusOne.style.top = `${y}px`;
+
+            clickPad.appendChild(plusOne);
+
+            plusOne.addEventListener('animationend', () => {
+                plusOne.remove();
+            });
+        }
+
+        // 初始化加载一次记录
+        renderRecords();
+    </script>
+</body>
+</html>
